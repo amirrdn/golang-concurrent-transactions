@@ -1,5 +1,3 @@
-// tests/ewallet_test.go
-
 package tests
 
 import (
@@ -45,16 +43,22 @@ func TestConcurrentCredit(t *testing.T) {
 
 	var wg sync.WaitGroup
 
+	var mu sync.Mutex
+
 	for i := 0; i < 100; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 100; j++ {
-				balance, transactionID, err := ws.Credit(userID, 1000) //user value sum tertentu
+				balance, transactionID, err := ws.Credit(userID, 1000)
 				if err != nil {
 					t.Errorf("Error crediting: %v", err)
+					return
 				}
+
+				mu.Lock() // race condition
 				t.Logf("Transaction ID: %d, New Balance: %f", transactionID, balance)
+				mu.Unlock()
 			}
 		}()
 	}
@@ -67,6 +71,7 @@ func TestConcurrentCredit(t *testing.T) {
 	}
 
 	expectedBalance := 10000000.0
+
 	if balance != expectedBalance {
 		t.Errorf("Expected balance %f, got %f", expectedBalance, balance)
 	}

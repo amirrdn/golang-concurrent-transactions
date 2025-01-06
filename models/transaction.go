@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Transaction struct {
 	ID        int       `json:"id"`
